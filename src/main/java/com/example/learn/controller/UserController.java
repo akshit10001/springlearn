@@ -61,7 +61,8 @@ public class UserController {
     }
 
     @DeleteMapping("delete/email/{email}")
-    public ResponseEntity<String> deleteUserByEmail(@PathVariable String email) {
+    public ResponseEntity<String> deleteUserByEmail(@PathVariable String email) throws Exception {
+        if(email.isEmpty() || email.length() == 0) throw new Exception();
         return userService.deleteUserByEmail(email);
     }
 
