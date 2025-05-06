@@ -57,7 +57,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const { owner, repo, number } = context.issue;
-          const mcpReview = ${{ steps.mcp-review.outputs.review-output }};
+          const mcpReview = context.payload.steps['mcp-review'].outputs['review-output'] || 'No review output available';
           const testResults = `
           ### Test Results 🧪
           ✅ Tests completed
@@ -72,7 +72,7 @@ jobs:
           Please review the detailed reports in the checks tab.
           `;
           
-          github.rest.issues.createComment({
+          await github.rest.issues.createComment({
             owner,
             repo,
             issue_number: number,
@@ -110,7 +110,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const { owner, repo, number } = context.issue;
-          const mcpSecurity = ${{ steps.mcp-security.outputs.security-output }};
+          const mcpSecurity = context.payload.steps['mcp-security'].outputs['security-output'] || 'No security analysis output available';
           const securityResults = `
           ### Security Scan Results 🔒
           ✅ OWASP Dependency check completed
@@ -121,7 +121,7 @@ jobs:
           Please review the detailed security report in the checks tab.
           `;
           
-          github.rest.issues.createComment({
+          await github.rest.issues.createComment({
             owner,
             repo,
             issue_number: number,
