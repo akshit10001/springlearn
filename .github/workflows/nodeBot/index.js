@@ -1,9 +1,56 @@
 const { Octokit } = require("@octokit/rest");
 const { createAppAuth } = require("@octokit/auth-app");
 
+// Add debug logging
+console.log('Starting PR Review Bot...');
+console.log('Environment variables:', {
+  appId: process.env.APP_ID ? 'Set' : 'Not set',
+  privateKey: process.env.PRIVATE_KEY ? 'Set' : 'Not set',
+  installationId: process.env.INSTALLATION_ID ? 'Set' : 'Not set'
+});
+
 const appId = process.env.APP_ID;
 const privateKey = process.env.PRIVATE_KEY;
 const installationId = process.env.INSTALLATION_ID;
+
+// Add main execution
+async function main() {
+  try {
+    console.log('Initializing Octokit...');
+    const octokit = new Octokit({
+      authStrategy: createAppAuth,
+      auth: {
+        appId,
+        privateKey,
+        installationId,
+      },
+    });
+
+    // Get PR number from environment
+    const prNumber = process.env.PR_NUMBER || process.env.GITHUB_EVENT_PATH;
+    console.log('PR Number:', prNumber);
+
+    // Get repository info from environment
+    const owner = process.env.GITHUB_REPOSITORY?.split('/')[0];
+    const repo = process.env.GITHUB_REPOSITORY?.split('/')[1];
+    console.log('Repository:', { owner, repo });
+
+    if (!prNumber || !owner || !repo) {
+      throw new Error('Missing required environment variables');
+    }
+
+    await reviewPR(owner, repo, prNumber);
+    console.log('PR review completed successfully');
+  } catch (error) {
+    console.error('Error in PR review:', error);
+    process.exit(1);
+  }
+}
+
+// ... rest of your existing reviewPR function ...
+
+// Call main function
+main().catch(console.error);
 
 const octokit = new Octokit({
   authStrategy: createAppAuth,
