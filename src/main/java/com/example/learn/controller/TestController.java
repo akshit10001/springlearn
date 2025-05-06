@@ -20,10 +20,6 @@ public class TestController {
     }
 
     public void safeOperation() {
-        try {
-            // Some operation
-        } catch (Exception e) {
-            logger.error("Operation failed", e);
-        }
+        logger.error("Operation failed");
     }
 }
