@@ -56,8 +56,7 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          const { owner, repo, number } = context.issue;
-          const mcpReview = context.payload.steps['mcp-review'].outputs['review-output'] || 'No review output available';
+          const reviewOutput = '${{ steps.mcp-review.outputs.review-output }}' || 'No review output available';
           const testResults = `
           ### Test Results 🧪
           ✅ Tests completed
@@ -67,15 +66,14 @@ jobs:
           - PMD analysis completed
           
           ### MCP Review Results 🤖
-          ${mcpReview}
+          ${reviewOutput}
           
           Please review the detailed reports in the checks tab.
           `;
           
           await github.rest.issues.createComment({
-            owner,
-            repo,
-            issue_number: number,
+            ...context.repo,
+            issue_number: context.issue.number,
             body: testResults
           });
 
@@ -109,21 +107,19 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          const { owner, repo, number } = context.issue;
-          const mcpSecurity = context.payload.steps['mcp-security'].outputs['security-output'] || 'No security analysis output available';
+          const securityOutput = '${{ steps.mcp-security.outputs.security-output }}' || 'No security analysis output available';
           const securityResults = `
           ### Security Scan Results 🔒
           ✅ OWASP Dependency check completed
           
           ### MCP Security Analysis 🛡️
-          ${mcpSecurity}
+          ${securityOutput}
           
           Please review the detailed security report in the checks tab.
           `;
           
           await github.rest.issues.createComment({
-            owner,
-            repo,
-            issue_number: number,
+            ...context.repo,
+            issue_number: context.issue.number,
             body: securityResults
           });
