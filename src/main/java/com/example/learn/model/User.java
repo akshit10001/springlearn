@@ -44,12 +44,23 @@ public class User {
     }
 
     public void setPassword(String rawPassword) {
-        if (rawPassword != null) {
-            this.password = passwordEncoder.encode(rawPassword);
-        }
+        this.password = passwordEncoder.encode(rawPassword);
     }
 
     public boolean checkPassword(String rawPassword) {
         return passwordEncoder.matches(rawPassword, this.password);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        User user = (User) o;
+        return id != null && id.equals(user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
