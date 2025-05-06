@@ -59,10 +59,16 @@ class UserControllerTest {
         userData.setName("akshit");
         userData.setPassword("password123");
         String email = "john.doe@example.com";
-        User user = new User(userData.getName(), email ,userData.getPassword());
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(userRepository.save(any())).thenReturn(user);
-        assertEquals("User Updated Successfully",userController.updateUser(email, userData).getBody());
+        
+        User existingUser = new User();
+        existingUser.setEmail(email);
+        existingUser.setPassword("password123"); // Set the same password that will be used in update
+        existingUser.setName("oldName");
+        
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any())).thenReturn(existingUser);
+        
+        assertEquals("User Updated Successfully", userController.updateUser(email, userData).getBody());
     }
 
     @ParameterizedTest

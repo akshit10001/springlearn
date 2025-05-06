@@ -17,10 +17,17 @@ jobs:
       with:
         java-version: '8'
         distribution: 'adopt'
-        cache: maven
+        cache: 'maven'
     
+    - name: Cache Maven packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+
     - name: Build with Maven
-      run: mvn -B clean verify
+      run: mvn -B clean verify -U
     
     - name: Run Tests
       run: mvn test

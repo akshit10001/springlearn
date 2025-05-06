@@ -86,12 +86,13 @@ public class UserImplementation implements UserService {
             if (user == null) {
                 return new ResponseEntity<>("User Not Found", HttpStatus.NOT_FOUND);
             }
-            if (user.getPassword().equals(password)) {
+            if (user.checkPassword(password)) {
                 user.setName(name);
+                User updatedUser = createUser(user);
+                return new ResponseEntity<>(updatedUser != null ? "User Updated Successfully" : "Error In Creating User", HttpStatus.OK);
             } else {
                 return new ResponseEntity<>("Invalid Password", HttpStatus.UNAUTHORIZED);
             }
-            return new ResponseEntity<>(createUser(user)!=null ? "User Updated Successfully" : "Error In Creating User", HttpStatus.OK);
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
