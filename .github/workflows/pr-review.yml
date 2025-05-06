@@ -53,4 +53,4 @@ jobs:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           INSTALLATION_ID: ${{ secrets.INSTALLATION_ID }}
         run: nodeBot/index.js
-        working-directory: ./bot  # adjust if your script is in a subfolder
+
