@@ -1,11 +1,9 @@
-import { Octokit } from "@octokit/rest";
-import { createAppAuth } from "@octokit/auth-app";
+const { Octokit } = require("@octokit/rest");
+const { createAppAuth } = require("@octokit/auth-app");
 
-const appId = "YOUR_APP_ID";
-const privateKey = `-----BEGIN PRIVATE KEY-----
-YOUR_PRIVATE_KEY
------END PRIVATE KEY-----`;
-const installationId = "YOUR_INSTALLATION_ID";
+const appId = process.env.APP_ID;
+const privateKey = process.env.PRIVATE_KEY;
+const installationId = process.env.INSTALLATION_ID;
 
 const octokit = new Octokit({
   authStrategy: createAppAuth,
@@ -62,4 +60,5 @@ async function reviewPR(owner, repo, pull_number) {
   }
 }
 
-export default { reviewPR };
+// Export using CommonJS
+module.exports = { reviewPR };

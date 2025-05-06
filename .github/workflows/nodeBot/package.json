@@ -1,13 +1,13 @@
 {
-  "name": "github-bot",
-  "version": "1.0.0",
-  "description": "GitHub Actions bot for PR automation",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
-  "dependencies": {
-    "@actions/core": "^1.10.1",
-    "@actions/github": "^6.0.0"
+    "name": "pr-review-bot",
+    "version": "1.0.0",
+    "description": "GitHub PR Review Bot",
+    "main": "index.js",
+    "scripts": {
+      "start": "node index.js"
+    },
+    "dependencies": {
+      "@octokit/rest": "^19.0.7",
+      "@octokit/auth-app": "^4.0.13"
+    }
   }
-}
