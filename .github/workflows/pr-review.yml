@@ -6,12 +6,11 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  review:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Set up JDK 8
         uses: actions/setup-java@v3
@@ -24,9 +23,13 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '16'
+          cache: 'npm'
+          cache-dependency-path: '.github/workflows/nodeBot/package.json'
 
       - name: Install Node.js dependencies
-        run: npm ci
+        run: |
+          cd .github/workflows/nodeBot
+          npm install
 
       - name: Cache Maven packages
         uses: actions/cache@v3
@@ -52,5 +55,24 @@ jobs:
           APP_ID: ${{ secrets.APP_ID }}
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           INSTALLATION_ID: ${{ secrets.INSTALLATION_ID }}
-        run: ./.github/workflows/nodeBot/index.js
+        run: |
+          cd .github/workflows/nodeBot
+          node index.js
+
+
+  # security:
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - uses: actions/checkout@v3
+
+  #     - name: Set up JDK 8
+  #       uses: actions/setup-java@v3
+  #       with:
+  #         java-version: '8'
+  #         distribution: 'adopt'
+  #         cache: maven
+
+  #     - name: Run OWASP Dependency Check
+  #       run: mvn org.owasp:dependency-check-maven:check
 
