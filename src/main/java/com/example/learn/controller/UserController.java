@@ -18,9 +18,9 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("create")
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<User> createUser(@RequestBody User user) throws Exception {
         if (user == null || user.getPassword() == null || user.getEmail() == null || user.getName() == null) {
-            return ResponseEntity.badRequest().build();
+            throw new Exception();
         }
         User response = userService.createUser(user);
         return response != null ? ResponseEntity.status(HttpStatus.CREATED).body(response) 
