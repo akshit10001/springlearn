@@ -2,53 +2,56 @@ name: PR Review
 
 on:
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
     types: [opened, synchronize, reopened]
 
 jobs:
-  build:
+  review:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up JDK 8
-      uses: actions/setup-java@v3
-      with:
-        java-version: '8'
-        distribution: 'adopt'
-        cache: 'maven'
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 16 
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+          cache: 'maven'
 
-    - name: Install dependencies
-      run: npm install   
-    
-    - name: Cache Maven packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
 
-    - name: Build with Maven
-      run: mvn -B clean verify -U
-    
-    - name: Run Tests
-      run: mvn test
-    
-    - name: SpotBugs Static Analysis
-      run: mvn spotbugs:check
-    
-    - name: PMD Code Analysis
-      run: mvn pmd:check
-      
-    - name: Run PR Review Bot
-      env:
-        APP_ID: ${{ secrets.APP_ID }}
-        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-        INSTALLATION_ID: ${{ secrets.INSTALLATION_ID }}
-      run: node bot/index.js
+      - name: Install Node.js dependencies
+        run: npm ci
+        working-directory: ./bot  # adjust if your bot is in another folder
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build with Maven
+        run: mvn -B clean verify -U
+
+      - name: Run Tests
+        run: mvn test
+
+      - name: SpotBugs Static Analysis
+        run: mvn spotbugs:check
+
+      - name: PMD Code Analysis
+        run: mvn pmd:check
+
+      - name: Run PR Review Bot
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          INSTALLATION_ID: ${{ secrets.INSTALLATION_ID }}
+        run: node index.js
+        working-directory: ./bot  # adjust if your script is in a subfolder
