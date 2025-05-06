@@ -1,41 +1,55 @@
 package com.example.learn.model;
+
 import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 import lombok.Data;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Entity
 @Table(name = "users")
 @Data
 public class User {
 
+    private static final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long id;
 
+    @NotBlank(message = "Name is required")
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "email")  // Removed nullable=false and unique=true to test validation
+    @Email(message = "Please provide a valid email address")
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password")  // Removed nullable=false to test validation
-    private String password;  // No password hashing to trigger security check
+    @NotBlank(message = "Password is required")
+    @Column(name = "password", nullable = false)
+    private String password;
 
     public User() {}
     
-    public User(String name, String mail, String password) {
+    public User(String name, String email, String rawPassword) {
         this.name = name;
-        this.email = mail;
-        this.password = password;  // Direct password assignment to trigger security warning
+        this.email = email;
+        setPassword(rawPassword);
     }
 
-    // Added direct getter for password to trigger security warning
+    // Hide password from JSON serialization
     public String getPassword() {
-        return password;
+        return "[PROTECTED]";
     }
 
-    // Added unsafe password update method
-    public void updatePassword(String newPassword) {
-        this.password = newPassword;  // Direct password update without hashing
+    public void setPassword(String rawPassword) {
+        if (rawPassword != null) {
+            this.password = passwordEncoder.encode(rawPassword);
+        }
+    }
+
+    public boolean checkPassword(String rawPassword) {
+        return passwordEncoder.matches(rawPassword, this.password);
     }
 }
