@@ -52,5 +52,5 @@ jobs:
           APP_ID: ${{ secrets.APP_ID }}
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           INSTALLATION_ID: ${{ secrets.INSTALLATION_ID }}
-        run: nodeBot/index.js
+        run: ./.github/workflows/nodeBot/index.js
 
