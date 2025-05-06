@@ -38,7 +38,7 @@ async function main() {
     if (!prNumber || !owner || !repo) {
       throw new Error('Missing required environment variables');
     }
-
+    console.log('PR review started successfully');
     await reviewPR(owner, repo, prNumber);
     console.log('PR review completed successfully');
   } catch (error) {
