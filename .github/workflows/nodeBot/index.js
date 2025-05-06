@@ -16,7 +16,7 @@ const octokit = new Octokit({
 
 async function reviewPR(owner, repo, pull_number) {
   const { data: files } = await octokit.pulls.listFiles({ owner, repo, pull_number });
-
+  console.log(files);
   const comments = [];
   for (const file of files) {
     if (file.filename.endsWith("UserController.java")) {
