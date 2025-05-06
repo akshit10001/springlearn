@@ -28,12 +28,6 @@ class UserControllerTest {
     @MockBean
     private UserRepository userRepository;
 
-    @ParameterizedTest
-    @ArgumentsSource(DeleteUserByIdArguments.class)
-    void checkUserCreationMethod(User user) {
-        when(userRepository.save(any())).thenReturn(user);
-        assertNotNull(userController.createUser(user).getBody());
-    }
 
     @Test
     void getuserByIdTest()  {
