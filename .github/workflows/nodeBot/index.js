@@ -1,5 +1,6 @@
 const { Octokit } = require("@octokit/rest");
 const { createAppAuth } = require("@octokit/auth-app");
+const fs = require('fs');
 
 // Initialize environment variables
 const appId = process.env.APP_ID;
@@ -16,7 +17,7 @@ const octokit = new Octokit({
   },
 });
 
-async function reviewPR(owner, repo, pull_number) {
+async function reviewPR(octokit, owner, repo, pull_number) {
   console.log(`Reviewing PR #${pull_number} in ${owner}/${repo}`);
   const { data: files } = await octokit.pulls.listFiles({ owner, repo, pull_number });
   console.log(`Found ${files.length} files to review`);
@@ -77,21 +78,36 @@ async function main() {
       installationId: process.env.INSTALLATION_ID ? 'Set' : 'Not set'
     });
 
-    // Get PR number from environment
-    const prNumber = process.env.PR_NUMBER || process.env.GITHUB_EVENT_PATH;
-    console.log('PR Number:', prNumber);
+    // Parse GitHub event data
+    let prNumber;
+    if (process.env.GITHUB_EVENT_PATH) {
+      const eventData = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+      prNumber = eventData.pull_request?.number;
+      console.log('Parsed PR number from event:', prNumber);
+    } else {
+      prNumber = process.env.PR_NUMBER;
+      console.log('Using PR number from environment:', prNumber);
+    }
 
-    // Get repository info from environment
-    const owner = process.env.GITHUB_REPOSITORY?.split('/')[0];
-    const repo = process.env.GITHUB_REPOSITORY?.split('/')[1];
+    // Get repository info
+    const [owner, repo] = (process.env.GITHUB_REPOSITORY || '').split('/');
     console.log('Repository:', { owner, repo });
 
     if (!prNumber || !owner || !repo) {
-      throw new Error('Missing required environment variables');
+      throw new Error(`Missing required data: PR=${prNumber}, owner=${owner}, repo=${repo}`);
     }
 
-    console.log('PR review started successfully');
-    await reviewPR(owner, repo, prNumber);
+    const octokit = new Octokit({
+      authStrategy: createAppAuth,
+      auth: {
+        appId: process.env.APP_ID,
+        privateKey: process.env.PRIVATE_KEY,
+        installationId: process.env.INSTALLATION_ID,
+      },
+    });
+
+    console.log(`PR review started for #${prNumber}`);
+    await reviewPR(octokit, owner, repo, prNumber);
     console.log('PR review completed successfully');
   } catch (error) {
     console.error('Error in PR review:', error);
