@@ -26,45 +26,46 @@ async function reviewPR(octokit, owner, repo, pull_number) {
   for (const file of files) {
     if (file.filename.endsWith("UserController.java")) {
       const patch = file.patch.split("\n");
-      let currentLine = null;
-      let diffLine = 0;
+      let lineInFile = null;
+      let lineInDiff = 0;
 
-      // Parse the hunk header to get the starting line number
       patch.forEach((line) => {
         if (line.startsWith("@@")) {
           const match = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
           if (match) {
-            currentLine = parseInt(match[1], 10) - 1;
+            lineInFile = parseInt(match[1], 10) - 1;
           }
+          lineInDiff = -1; // Reset diff counter at each hunk
           return;
         }
 
-        diffLine++;
+        lineInDiff++;
         
-        if (currentLine === null) return;
+        if (lineInFile === null) return;
         
         if (line[0] === ' ' || line[0] === '+') {
-          currentLine++;
+          lineInFile++;
         }
 
         if (line[0] === '+') {
+          // Check for issues in added/modified lines
           if (line.includes("throws Exception")) {
             comments.push({
               path: file.filename,
-              position: diffLine,
-              line: currentLine,
-              body: "Avoid using `throws Exception`. Use specific exception types instead."
+              start_line: lineInFile,
+              start_side: 'RIGHT',
+              body: "🚨 Avoid using `throws Exception`. Use specific exception types instead to provide better error handling and documentation."
             });
-            console.log(`Adding comment at line ${currentLine} (diff position ${diffLine}): ${line}`);
+            console.log(`Adding comment at file line ${lineInFile}: ${line}`);
           }
           if (line.includes("email.isEmpty() || email.length() == 0")) {
             comments.push({
               path: file.filename,
-              position: diffLine,
-              line: currentLine,
-              body: "Use `StringUtils.isEmpty(email)` for better null/empty checks."
+              start_line: lineInFile,
+              start_side: 'RIGHT',
+              body: "💡 Consider using `StringUtils.isEmpty(email)` for better null/empty checks."
             });
-            console.log(`Adding comment at line ${currentLine} (diff position ${diffLine}): ${line}`);
+            console.log(`Adding comment at file line ${lineInFile}: ${line}`);
           }
         }
       });
@@ -81,13 +82,17 @@ async function reviewPR(octokit, owner, repo, pull_number) {
         owner,
         repo,
         pull_number,
-        body: "Automated code review comments",
+        body: "## 🤖 Automated Code Review\n\nI've reviewed the changes and found some suggestions for improvement.",
         event: "COMMENT",
         comments
       });
       console.log('Successfully created review:', review.data.id);
     } catch (error) {
-      console.error('Full error response:', JSON.stringify(error.response, null, 2));
+      console.error('Error creating review:', {
+        status: error.status,
+        message: error.message,
+        errors: error.response?.data?.errors
+      });
       throw error;
     }
   } else {
@@ -95,7 +100,7 @@ async function reviewPR(octokit, owner, repo, pull_number) {
       owner,
       repo,
       pull_number,
-      body: "No issues found in the PR.",
+      body: "## ✅ All Good!\n\nNo issues found in this PR. Great work!",
       event: "APPROVE"
     });
     console.log('Approved PR - no issues found');
