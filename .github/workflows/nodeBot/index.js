@@ -26,20 +26,44 @@ async function reviewPR(octokit, owner, repo, pull_number) {
   for (const file of files) {
     if (file.filename.endsWith("UserController.java")) {
       const patch = file.patch.split("\n");
-      patch.forEach((line, index) => {
-        if (line.includes("throws Exception")) {
-          comments.push({
-            path: file.filename,
-            line: index + 1,
-            body: "Avoid using `throws Exception`. Use specific exception types instead.",
-          });
+      let lineNumber = 0;
+      let inHunk = false;
+
+      patch.forEach((line) => {
+        // Track line numbers in the diff
+        if (line.startsWith("@@")) {
+          // Parse the @@ -1,7 +1,7 @@ format to get starting line number
+          const match = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+          if (match) {
+            lineNumber = parseInt(match[1], 10) - 1;
+            inHunk = true;
+          }
+          return;
         }
-        if (line.includes("email.isEmpty() || email.length() == 0")) {
-          comments.push({
-            path: file.filename,
-            line: index + 1,
-            body: "Use `StringUtils.isEmpty(email)` for better null/empty checks.",
-          });
+
+        if (!inHunk) return;
+
+        // Only increment line number for context and addition lines
+        if (line[0] === '+' || line[0] === ' ') {
+          lineNumber++;
+        }
+
+        // Only review added or modified lines
+        if (line[0] === '+') {
+          if (line.includes("throws Exception")) {
+            comments.push({
+              path: file.filename,
+              position: lineNumber,  // Use position instead of line
+              body: "Avoid using `throws Exception`. Use specific exception types instead.",
+            });
+          }
+          if (line.includes("email.isEmpty() || email.length() == 0")) {
+            comments.push({
+              path: file.filename,
+              position: lineNumber,  // Use position instead of line
+              body: "Use `StringUtils.isEmpty(email)` for better null/empty checks.",
+            });
+          }
         }
       });
     }
@@ -48,6 +72,9 @@ async function reviewPR(octokit, owner, repo, pull_number) {
   console.log(`Generated ${comments.length} review comments`);
 
   if (comments.length > 0) {
+    // Add debug logging
+    console.log('Review comments:', JSON.stringify(comments, null, 2));
+    
     await octokit.pulls.createReview({
       owner,
       repo,
