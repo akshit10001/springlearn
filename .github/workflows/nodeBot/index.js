@@ -51,8 +51,7 @@ async function reviewPR(octokit, owner, repo, pull_number) {
               comments.push({
                 path: file.filename,
                 position: position,
-                body: "🚨 Avoid using `throws Exception`. Use specific exception types instead to provide better error handling and documentation.",
-                commit_id: pullRequest.head.sha
+                body: "🚨 Avoid using `throws Exception`. Use specific exception types instead to provide better error handling and documentation."
               });
               console.log(`Adding comment at position ${position}: ${line}`);
             }
@@ -60,8 +59,7 @@ async function reviewPR(octokit, owner, repo, pull_number) {
               comments.push({
                 path: file.filename,
                 position: position,
-                body: "💡 Consider using `StringUtils.isEmpty(email)` for better null/empty checks.",
-                commit_id: pullRequest.head.sha
+                body: "💡 Consider using `StringUtils.isEmpty(email)` for better null/empty checks."
               });
               console.log(`Adding comment at position ${position}: ${line}`);
             }
