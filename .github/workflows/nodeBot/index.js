@@ -26,30 +26,45 @@ async function reviewPR(octokit, owner, repo, pull_number) {
   for (const file of files) {
     if (file.filename.endsWith("UserController.java")) {
       const patch = file.patch.split("\n");
-      let diffPosition = 0; // Track position within the diff
+      let currentLine = null;
+      let diffLine = 0;
 
+      // Parse the hunk header to get the starting line number
       patch.forEach((line) => {
-        diffPosition++; // Increment for each line in the diff
+        if (line.startsWith("@@")) {
+          const match = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+          if (match) {
+            currentLine = parseInt(match[1], 10) - 1;
+          }
+          return;
+        }
 
-        // Only review added or modified lines
+        diffLine++;
+        
+        if (currentLine === null) return;
+        
+        if (line[0] === ' ' || line[0] === '+') {
+          currentLine++;
+        }
+
         if (line[0] === '+') {
           if (line.includes("throws Exception")) {
             comments.push({
               path: file.filename,
-              position: diffPosition,
-              body: "Avoid using `throws Exception`. Use specific exception types instead.",
-              line: null // Remove line parameter as we're using position
+              position: diffLine,
+              line: currentLine,
+              body: "Avoid using `throws Exception`. Use specific exception types instead."
             });
-            console.log(`Adding comment at diff position ${diffPosition} for line: ${line}`);
+            console.log(`Adding comment at line ${currentLine} (diff position ${diffLine}): ${line}`);
           }
           if (line.includes("email.isEmpty() || email.length() == 0")) {
             comments.push({
               path: file.filename,
-              position: diffPosition,
-              body: "Use `StringUtils.isEmpty(email)` for better null/empty checks.",
-              line: null // Remove line parameter as we're using position
+              position: diffLine,
+              line: currentLine,
+              body: "Use `StringUtils.isEmpty(email)` for better null/empty checks."
             });
-            console.log(`Adding comment at diff position ${diffPosition} for line: ${line}`);
+            console.log(`Adding comment at line ${currentLine} (diff position ${diffLine}): ${line}`);
           }
         }
       });
@@ -67,12 +82,12 @@ async function reviewPR(octokit, owner, repo, pull_number) {
         repo,
         pull_number,
         body: "Automated code review comments",
-        event: "COMMENT", // Changed from REQUEST_CHANGES to COMMENT
+        event: "COMMENT",
         comments
       });
       console.log('Successfully created review:', review.data.id);
     } catch (error) {
-      console.error('Error details:', JSON.stringify(error.response.data, null, 2));
+      console.error('Full error response:', JSON.stringify(error.response, null, 2));
       throw error;
     }
   } else {
