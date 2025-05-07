@@ -26,43 +26,30 @@ async function reviewPR(octokit, owner, repo, pull_number) {
   for (const file of files) {
     if (file.filename.endsWith("UserController.java")) {
       const patch = file.patch.split("\n");
-      let lineNumber = 0;
-      let inHunk = false;
+      let diffPosition = 0; // Track position within the diff
 
       patch.forEach((line) => {
-        // Track line numbers in the diff
-        if (line.startsWith("@@")) {
-          // Parse the @@ -1,7 +1,7 @@ format to get starting line number
-          const match = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
-          if (match) {
-            lineNumber = parseInt(match[1], 10) - 1;
-            inHunk = true;
-          }
-          return;
-        }
-
-        if (!inHunk) return;
-
-        // Only increment line number for context and addition lines
-        if (line[0] === '+' || line[0] === ' ') {
-          lineNumber++;
-        }
+        diffPosition++; // Increment for each line in the diff
 
         // Only review added or modified lines
         if (line[0] === '+') {
           if (line.includes("throws Exception")) {
             comments.push({
               path: file.filename,
-              position: lineNumber,  // Use position instead of line
+              position: diffPosition,
               body: "Avoid using `throws Exception`. Use specific exception types instead.",
+              line: null // Remove line parameter as we're using position
             });
+            console.log(`Adding comment at diff position ${diffPosition} for line: ${line}`);
           }
           if (line.includes("email.isEmpty() || email.length() == 0")) {
             comments.push({
               path: file.filename,
-              position: lineNumber,  // Use position instead of line
+              position: diffPosition,
               body: "Use `StringUtils.isEmpty(email)` for better null/empty checks.",
+              line: null // Remove line parameter as we're using position
             });
+            console.log(`Adding comment at diff position ${diffPosition} for line: ${line}`);
           }
         }
       });
@@ -72,25 +59,29 @@ async function reviewPR(octokit, owner, repo, pull_number) {
   console.log(`Generated ${comments.length} review comments`);
 
   if (comments.length > 0) {
-    // Add debug logging
     console.log('Review comments:', JSON.stringify(comments, null, 2));
     
-    await octokit.pulls.createReview({
-      owner,
-      repo,
-      pull_number,
-      body: "Automated review comments:",
-      event: "REQUEST_CHANGES",
-      comments,
-    });
-    console.log('Created review with comments');
+    try {
+      const review = await octokit.pulls.createReview({
+        owner,
+        repo,
+        pull_number,
+        body: "Automated code review comments",
+        event: "COMMENT", // Changed from REQUEST_CHANGES to COMMENT
+        comments
+      });
+      console.log('Successfully created review:', review.data.id);
+    } catch (error) {
+      console.error('Error details:', JSON.stringify(error.response.data, null, 2));
+      throw error;
+    }
   } else {
     await octokit.pulls.createReview({
       owner,
       repo,
       pull_number,
       body: "No issues found in the PR.",
-      event: "APPROVE",
+      event: "APPROVE"
     });
     console.log('Approved PR - no issues found');
   }
