@@ -13,5 +13,6 @@ public class UserJDBCRepository {
     public void updateUser(String name,String email,String password){
         String sql = "update users set name = ? where email = ? and password =?";
         jdbcTemplate.update(sql,name,email,password);
+        System.out.println("this is the PR");
     }
 }
