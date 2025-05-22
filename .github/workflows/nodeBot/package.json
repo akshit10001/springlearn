@@ -1,13 +1,14 @@
 {
-    "name": "pr-review-bot",
-    "version": "1.0.0",
-    "description": "GitHub PR Review Bot",
-    "main": "index.js",
-    "scripts": {
-      "start": "node index.js"
-    },
-    "dependencies": {
-      "@octokit/rest": "^19.0.7",
-      "@octokit/auth-app": "^4.0.13"
-    }
+  "name": "pr-review-bot",
+  "version": "1.0.0",
+  "description": "GitHub PR Review Bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@octokit/rest": "^19.0.7",
+    "@octokit/auth-app": "^4.0.13",
+    "dotenv": "^16.0.3"
   }
+}
